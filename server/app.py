@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 from flask import Flask, jsonify, make_response
+from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-
-from models import db, Bakery, BakedGood
+from models import db, User, Review, Game
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -17,56 +17,42 @@ db.init_app(app)
 
 @app.route('/')
 def index():
-    return '<h1>Bakery GET API</h1>'
+    return "Index for Game/Review/User API"
 
-@app.route('/bakeries')
-def bakeries():
+@app.route('/games')
+def games():
 
-    bakeries = Bakery.query.all()
-    bakeries_serialized = [bakery.to_dict() for bakery in bakeries]
-
-    response = make_response(
-        bakeries_serialized,
-        200
-    )
-    return response
-
-@app.route('/bakeries/<int:id>')
-def bakery_by_id(id):
-    bakery = Bakery.query.filter_by(id=id).first()
-    bakery_serialized = bakery.to_dict()
+    games = []
+    for game in Game.query.all():
+        game_dict = {
+            "title": game.title,
+            "genre": game.genre,
+            "platform": game.platform,
+            "price": game.price,
+        }
+        games.append(game_dict)
 
     response = make_response(
-        bakery_serialized,
+        jsonify(games),
         200
     )
+    response.headers["Content-Type"] = "application/json"
+
     return response
 
-@app.route('/baked_goods/by_price')
-def baked_goods_by_price():
-    baked_goods_by_price = BakedGood.query.order_by(BakedGood.price).all()
-    baked_goods_by_price_serialized = [
-        bg.to_dict() for bg in baked_goods_by_price
-    ]
-    
-    response = make_response(
-        baked_goods_by_price_serialized,
-        200
-    )
-    return response
+@app.route('/games/<int:id>')
+def game_by_id(id):
+    game = Game.query.filter_by(id=id).first()
 
-
-@app.route('/baked_goods/most_expensive')
-def most_expensive_baked_good():
-    most_expensive = BakedGood.query.order_by(BakedGood.price.desc()).limit(1).first()
-    most_expensive_serialized = most_expensive.to_dict()
+    game_dict = game.to_dict()
 
     response = make_response(
-        most_expensive_serialized,
+        jsonify(game_dict),
         200
     )
-    return response
+    response.headers["Content-Type"] = "application/json"
 
+    return response
 
 if __name__ == '__main__':
-    app.run(port=5555, debug=True)
+    app.run(port=5555)
